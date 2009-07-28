@@ -29,11 +29,12 @@ do_accept(LSocket) ->
 %% Sit in a loop, echoing everything that comes in on the socket.
 %% Exits cleanly on client disconnect.
 
-do_echo(Socket, Pid) ->
+do_echo(Socket) ->
     case gen_tcp:recv(Socket, 0) of
         {ok, Data} ->
             gen_tcp:send(Socket, Data),
 	    handle_client(Socket, Data),
+%%split name and data into two pakcets, get name then send everything off to client manager
             do_echo(Socket);
         {error, closed} ->
             ok
@@ -52,9 +53,8 @@ handle_client(Socket, Data) ->
 client_manager(Players) ->
     receive
         {get, Socket, Data} ->
-            {Data, Socket, Pid} = Players,
-            
-
+            {Data,_, Pid} = Players,
+            gen_tcp:send(Socket, Pid);
         {data, Socket, Data} ->
             
         {name, Socket, Data} ->
