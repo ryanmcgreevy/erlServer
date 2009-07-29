@@ -1,0 +1,13 @@
+#######################################################
+#Text file for packet design, layout and command type # 
+#definitions, subject to change often                 #
+#Author:Ryan McGreevy                                 #
+#######################################################
+
+
+#begin packet layout
+0       1        2   1024 
+cmdChar1|cmdChar2|data|
+
+#end packet layout
+
