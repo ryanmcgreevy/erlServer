@@ -1,6 +1,14 @@
 -module(erlServer).
 -export([listen/1]).
 
+
+
+
+%%use DICTS for the clients/players. key = name, value = {Socket, Pid}?
+
+
+
+
 %% TCP options for our listening socket.  The initial list atom
 %% specifies that we should receive data as lists of bytes (ie
 %% strings) rather than binary objects and the rest are explained
@@ -34,7 +42,6 @@ do_echo(Socket) ->
         {ok, Data} ->
             gen_tcp:send(Socket, Data),
 	    handle_client(Socket, Data),
-%%split name and data into two pakcets, get name then send everything off to client manager
             do_echo(Socket);
         {error, closed} ->
             ok
