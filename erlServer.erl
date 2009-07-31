@@ -1,6 +1,6 @@
 -module(erlServer).
 -export([listen/1]).
-
+-record(subscription, {name, subscribers = []}).
 %%self() gets the Pid of the process its evoked in
 
 %% TCP options for our listening socket.  The initial list atom
@@ -33,7 +33,6 @@ do_echo(Socket) ->
     case gen_tcp:recv(Socket, 0) of
         {ok, Data} ->
 	    handle_client( Socket, Data),
-            do_echo(Socket);
         {error, closed} ->
             ok
     end.
@@ -51,8 +50,8 @@ client_manager(Players) ->
     receive
         {data, Socket, Data} ->
             {ok, CSocket} = dict:find("Ryan", Players),
-            Res = parse_packets(Data),
-            io:format("~w",[Res]);
+            {match, Matches} = parse_packets(Data),
+            io:format("~w",[Matches]);
 	    %gen_tcp:send(CSocket, Data);    
         {name, Socket, Name} ->
             PlayersMod = dict:store(Name, Socket, Players),
@@ -62,9 +61,7 @@ client_manager(Players) ->
     client_manager(Players).
 
 parse_packets(Packet) ->
-    %%{ok, Reg1} = re:compile("t",unicode),
     {ok, Reg} = re:compile("<([A-Z][A-Z0-9]*)\\b[^>]*>(.*?)</\\1>", [unicode, caseless]),
-    %%io:format("made it",[]),
-    Result = re:run(Packet, Reg, [global, {capture, [0], list}]),
+    Result = re:run(Packet, Reg, [global, {capture, [1,2], list}]),
     Result.
 
