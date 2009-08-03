@@ -32,7 +32,8 @@ do_accept(LSocket) ->
 do_echo(Socket) ->
     case gen_tcp:recv(Socket, 0) of
         {ok, Data} ->
-	    handle_client(Socket, Data);
+	    handle_client(Socket, Data),
+            do_echo(Socket);
         {error, closed} ->
             ok
     end.
@@ -40,7 +41,8 @@ do_echo(Socket) ->
 handle_client(Socket, Data) ->
     {match, Matches} = parse_packets(Data),
     io:format("~w",[Matches]),
-    [[[Tag],[Content], _Rest]] = Matches,
+    [[Tag, Content]] = Matches,
+    %io:format("~w",[Tag]),
     case Tag of
         "Data" ->
 	    client_manager ! {data, Socket, Content};
@@ -52,7 +54,7 @@ client_manager(Players) ->
     receive
         {data, Socket, Data} ->
             {ok, CSocket} = dict:find("Ryan", Players),
-	    gen_tcp:send(CSocket, Data);    
+	    gen_tcp:send(CSocket, Data);
         {name, Socket, Name} ->
             PlayersMod = dict:store(Name, Socket, Players),
 	    client_manager(PlayersMod)

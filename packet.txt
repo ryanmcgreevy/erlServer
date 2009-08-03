@@ -6,8 +6,11 @@
 
 
 #begin packet layout
-0       1        2   1024 
-cmdChar1|cmdChar2|data|
-
+<Tag>Data</Tag> where the first letter of a tag is capitalized.
 #end packet layout
+
+#begin tag types
+<Name></Name> = Associates player's name with socket for later communication
+<Data></Data> = Generalized tag for data, will be changed as message types are worked out
+#end tag types
 
