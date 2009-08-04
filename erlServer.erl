@@ -16,6 +16,7 @@
 listen(Port) ->
     {ok, LSocket} = gen_tcp:listen(Port, ?TCP_OPTIONS),
     register(client_manager, spawn(fun() -> client_manager(dict:new()) end)),
+    register(game_manager, spawn(fun() -> game_manager(dict:new()) end)),
     do_accept(LSocket).
 
 %% The accept gets its own function so we can loop easily.  Yay tail
@@ -40,8 +41,8 @@ do_echo(Socket) ->
 
 handle_client(Socket, Data) ->
     {match, Matches} = parse_packets(Data),
-    %io:format("~w",[Matches]),
-    [[Tag, Content], Rest] = Matches,
+    %io:format("~w~n",[Matches]),
+    [[Tag, Content] | Rest] = Matches,
     %io:format("~w",[Tag]),
     case Tag of
         "Data" ->
@@ -49,7 +50,13 @@ handle_client(Socket, Data) ->
         "Name" ->
             client_manager ! {name, Socket, Content};
         "Players" ->
-            client_manager ! {players, Socket}
+            client_manager ! {players, Socket};
+        "Game" ->
+            [[_Tag, MyName] | _] = Rest,
+            client_manager ! {game, Socket, Content, MyName};
+        "Move" ->
+            [[_Tag, MyName] | _] = Rest,
+            game_manager ! {move, Socket, Content, MyName}
     end.
 
 client_manager(Players) ->
@@ -61,9 +68,11 @@ client_manager(Players) ->
             PlayersMod = dict:store(Name, Socket, Players),
 	    client_manager(PlayersMod);
         {players, Socket} ->
-            gen_tcp:send(Socket, list_players(dict:to_list(Players), []))
-        %{game, Socket, Opponent, MyName} ->
-        %    put some sort of new game loop instantiation inside some function that handles game subscriptions   
+            gen_tcp:send(Socket, list_players(dict:to_list(Players), []));
+        {game, Socket, Opponent, MyName} ->
+            {ok, CSocket} = dict:find(Opponent, Players),
+            Pid = spawn(fun() -> game(Socket, CSocket) end),
+            game_manager ! {new, Opponent, MyName, Pid}
     end,
     client_manager(Players).
 
@@ -78,4 +87,28 @@ list_players(Players, ReturnList) ->
     [ {Person, Socket} | Rest ] = Players,
     UpdatedPlayers = [Person, " " | ReturnList],
     list_players(Rest, UpdatedPlayers).
+
+game(P1S, P2S) ->
+    receive
+        {move, Socket, Move} ->
+            case Socket of
+                P1S ->
+                    gen_tcp:send(P2S, Move);
+                P2S ->
+                    gen_tcp:send(P1S, Move)
+            end
+    end,
+    game(P1S, P2S).
+
+game_manager(Games) ->
+    receive
+        {new, Name1, Name2, Pid} ->
+            Update1 = dict:store(Name1, Pid, Games),
+            Update2 = dict:store(Name2, Pid, Update1),
+            game_manager(Update2);
+        {move, Socket, Move, Name} ->
+            {ok, Pid} = dict:find(Name, Games),     
+            Pid ! {move, Socket, Move}
+    end,
+    game_manager(Games).      
 

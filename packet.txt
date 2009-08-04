@@ -10,9 +10,11 @@
 #end packet layout
 
 #begin tag types
-<Name></Name><n></n> = Associates player's name with socket for later communication
-<Data></Data><n></n> = Generalized tag for data, will be changed as message types are worked out
-<Players></Players><n></n> = List of players connected to server, separated by a single space
+<Name>Player's Name</Name> = Associates player's name with socket for later communication
+<Data>Data</Data> = Generalized tag for data, will be changed as message types are worked out
+<Players></Players> = List of players connected to server, separated by a single space
+<Game>DesiredOpponentsName</Game><Name>Player's Name</Name> = initiates a game between the specified players
+<Move>Player'sMove</Move><Name>Player's Name</Name> = move the player makes
 #end tag types
 
 
