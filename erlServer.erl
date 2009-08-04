@@ -40,14 +40,16 @@ do_echo(Socket) ->
 
 handle_client(Socket, Data) ->
     {match, Matches} = parse_packets(Data),
-    io:format("~w",[Matches]),
-    [[Tag, Content]] = Matches,
+    %io:format("~w",[Matches]),
+    [[Tag, Content], Rest] = Matches,
     %io:format("~w",[Tag]),
     case Tag of
         "Data" ->
 	    client_manager ! {data, Socket, Content};
         "Name" ->
-            client_manager ! {name, Socket, Content}
+            client_manager ! {name, Socket, Content};
+        "Players" ->
+            client_manager ! {players, Socket}
     end.
 
 client_manager(Players) ->
@@ -57,7 +59,11 @@ client_manager(Players) ->
 	    gen_tcp:send(CSocket, Data);
         {name, Socket, Name} ->
             PlayersMod = dict:store(Name, Socket, Players),
-	    client_manager(PlayersMod)
+	    client_manager(PlayersMod);
+        {players, Socket} ->
+            gen_tcp:send(Socket, list_players(dict:to_list(Players), []))
+        %{game, Socket, Opponent, MyName} ->
+        %    put some sort of new game loop instantiation inside some function that handles game subscriptions   
     end,
     client_manager(Players).
 
@@ -65,4 +71,11 @@ parse_packets(Packet) ->
     {ok, Reg} = re:compile("<([A-Z][A-Z0-9]*)\\b[^>]*>(.*?)</\\1>", [unicode, caseless]),
     Result = re:run(Packet, Reg, [global, {capture, [1,2], list}]),
     Result.
+
+list_players([], ReturnList) ->
+    ReturnList;
+list_players(Players, ReturnList) ->
+    [ {Person, Socket} | Rest ] = Players,
+    UpdatedPlayers = [Person, " " | ReturnList],
+    list_players(Rest, UpdatedPlayers).
 

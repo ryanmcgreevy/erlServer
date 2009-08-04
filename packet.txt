@@ -10,7 +10,9 @@
 #end packet layout
 
 #begin tag types
-<Name></Name> = Associates player's name with socket for later communication
-<Data></Data> = Generalized tag for data, will be changed as message types are worked out
+<Name></Name><n></n> = Associates player's name with socket for later communication
+<Data></Data><n></n> = Generalized tag for data, will be changed as message types are worked out
+<Players></Players><n></n> = List of players connected to server, separated by a single space
 #end tag types
+
 

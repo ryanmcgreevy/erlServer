@@ -1,5 +1,6 @@
 import socket
 import thread
+##Create a message class that has a method for each type of xml-like message packet which takes in the data and forms the message for the programmer
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 s.connect(("localhost", 1800))
 
