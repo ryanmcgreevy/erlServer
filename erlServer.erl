@@ -19,15 +19,13 @@ listen(Port) ->
     register(game_manager, spawn(fun() -> game_manager(dict:new()) end)),
     do_accept(LSocket).
 
-%% The accept gets its own function so we can loop easily.  Yay tail
-%% recursion!
-
+%% The accept gets its own function so we can loop easily.
 do_accept(LSocket) ->
     {ok, Socket} = gen_tcp:accept(LSocket),
     spawn(fun() -> do_echo(Socket)end),
     do_accept(LSocket).
 
-%% Sit in a loop, echoing everything that comes in on the socket.
+%% Sit in a loop, waiting for messages on the socket, sends data to handle_client
 %% Exits cleanly on client disconnect.
 
 do_echo(Socket) ->
@@ -39,11 +37,10 @@ do_echo(Socket) ->
             ok
     end.
 
+%sends data from socket to be parsed and routes the message according to first tag
 handle_client(Socket, Data) ->
     {match, Matches} = parse_packets(Data),
-    %io:format("~w~n",[Matches]),
     [[Tag, Content] | Rest] = Matches,
-    %io:format("~w",[Tag]),
     case Tag of
         "Data" ->
 	    client_manager ! {data, Socket, Content};
@@ -59,6 +56,7 @@ handle_client(Socket, Data) ->
             game_manager ! {move, Socket, Content, MyName}
     end.
 
+%maintains a list of players (note: add delete on disconnect) and options on what to do with them
 client_manager(Players) ->
     receive
         {data, Socket, Data} ->
@@ -76,11 +74,13 @@ client_manager(Players) ->
     end,
     client_manager(Players).
 
+%use regex to parse the xml-like messages used to send data
 parse_packets(Packet) ->
     {ok, Reg} = re:compile("<([A-Z][A-Z0-9]*)\\b[^>]*>(.*?)</\\1>", [unicode, caseless]),
     Result = re:run(Packet, Reg, [global, {capture, [1,2], list}]),
     Result.
 
+%returns a list of players separated by a single space
 list_players([], ReturnList) ->
     ReturnList;
 list_players(Players, ReturnList) ->
@@ -88,6 +88,8 @@ list_players(Players, ReturnList) ->
     UpdatedPlayers = [Person, " " | ReturnList],
     list_players(Rest, UpdatedPlayers).
 
+%game process, runs when new game is made and basically makes sure the players
+%are updated on the game state
 game(P1S, P2S) ->
     receive
         {move, Socket, Move} ->
@@ -100,6 +102,7 @@ game(P1S, P2S) ->
     end,
     game(P1S, P2S).
 
+%manages the creation of a new game, moves made by players and a list of active games
 game_manager(Games) ->
     receive
         {new, Name1, Name2, Pid} ->
