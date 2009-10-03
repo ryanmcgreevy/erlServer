@@ -66,7 +66,7 @@ client_manager(Players) ->
             PlayersMod = dict:store(Name, Socket, Players),
 	    client_manager(PlayersMod);
         {players, Socket} ->
-            gen_tcp:send(Socket, list_players(dict:to_list(Players), []));
+            gen_tcp:send(Socket, list_players("<Players>" ++ dict:to_list(Players) ++ "</Players>", []));
         {game, Socket, Opponent, MyName} ->
             {ok, CSocket} = dict:find(Opponent, Players),
             Pid = spawn(fun() -> game(Socket, CSocket) end),
