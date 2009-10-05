@@ -1,7 +1,7 @@
 import socket
 import thread
 import re
-xml_pack = re.compile("<([A-Z][A-Z0-9]*)\\b[^>]*>(.*?)</\\1>") 
+xml_pack = re.compile("<([A-Z][A-Z0-9]*)\\b[^>]*>(.*?)</\\1>", re.IGNORECASE) 
 def listen(sock):
     while True:
         recieved = sock.recv(1024)
@@ -14,6 +14,8 @@ def start():
     send_message(sock, "Name", Name)
     raw_input("hit enter for player list....")
     send_message(sock, "Players", "")
+    while True:
+        raw_input("hello")
 
 def manage_message(msg):
     parsed_message = xml_pack.findall(msg)
