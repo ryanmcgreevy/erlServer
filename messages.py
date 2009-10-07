@@ -23,9 +23,9 @@ def manage_message(msg):
     print parsed_message
 
 def send_message(sock, Tag, Data):
-    if Tag == ("Name" or "Players"):
+    if Tag == "Name" or Tag == "Players":
         sock.send("<%(tag)s>%(data)s</%(tag)s>"%{"tag": Tag, "data": Data[0]})
-    if ("Game" or "Move") == Tag:
+    if Tag == "Game" or Tag == "Move":
         sock.send("<%(tag)s>%(data)s</%(tag)s><Name>%(name)s</Name>"%{"tag": Tag,
                                                                       "data": Data[0],
                                                                       "name": Data[1]})

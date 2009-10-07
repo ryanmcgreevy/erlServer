@@ -19,9 +19,9 @@ class board(self):
                 right += 1
         if left or middle or right == 3:
             return True
-        elif (self.board[0][0] and self.board[1][1] and self.board[2][2]) == self.player:
+        elif self.board[0][0] == self.player and self.board[1][1] == self.player and self.board[2][2] == self.player:
             return True
-        elif (self.board[0][2] and self.board[1][1] and self.board[2][0]) == self.player:
+        elif self.board[0][2] == self.player and self.board[1][1] == self.player and self.board[2][0] == self.player:
             return True
         else:
             return False
