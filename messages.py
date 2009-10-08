@@ -1,7 +1,10 @@
 import socket
 import thread
 import re
-xml_pack = re.compile("<([A-Z][A-Z0-9]*)\\b[^>]*>(.*?)</\\1>", re.IGNORECASE) 
+xml_pack = re.compile("<([A-Z][A-Z0-9]*)\\b[^>]*>(.*?)</\\1>", re.IGNORECASE)
+single = ("Name", "Players")
+double = ("Game", "Move")
+
 def listen(sock):
     while True:
         recieved = sock.recv(1024)
@@ -16,16 +19,16 @@ def start():
     raw_input("hit enter for player list....")
     send_message(sock, "Players", ("",))
     while True:
-        raw_input("hello")
+        raw_input()
 
 def manage_message(msg):
     parsed_message = xml_pack.findall(msg)
     print parsed_message
 
 def send_message(sock, Tag, Data):
-    if Tag == "Name" or Tag == "Players":
+    if Tag in single:
         sock.send("<%(tag)s>%(data)s</%(tag)s>"%{"tag": Tag, "data": Data[0]})
-    if Tag == "Game" or Tag == "Move":
+    if Tag in double:
         sock.send("<%(tag)s>%(data)s</%(tag)s><Name>%(name)s</Name>"%{"tag": Tag,
                                                                       "data": Data[0],
                                                                       "name": Data[1]})
